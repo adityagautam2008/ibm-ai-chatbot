@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Login | IBM Cloud Chatbot</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .login-box {
+            background: white;
+            padding: 30px;
+            width: 320px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px #00000020;
+        }
+
+        h2 {
+            text-align: center;
+            color: #0f62fe;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0 15px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #0f62fe;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0353e9;
+        }
+
+        p {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-box">
+        <h2>Student Login</h2>
+
+        <form id="loginForm">
+            <label>Enrollment Number</label>
+            <input
+                type="text"
+                id="enrollment"
+                placeholder="Enter enrollment number"
+                required
+            >
+
+            <label>Password</label>
+            <input
+                type="password"
+                id="password"
+                placeholder="Enter your password"
+                required
+            >
+
+            <button type="submit">Login</button>
+        </form>
+
+        <p>New student? <a href="signup.html">Create Account</a></p>
+
+        <p id="message"></p>
+    </div>
+    
+<script>
+    const loginForm = document.getElementById('loginForm');
+    const message = document.getElementById('message');
+
+    loginForm.addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        const enrollment = document.getElementById('enrollment').value.trim();
+        const password = document.getElementById('password').value;
+
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    enrollment: enrollment,
+                    password: password
+                })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+    message.textContent = 'Login successful! Welcome, ' + data.user.name;
+
+    setTimeout(function () {
+        window.location.href = '/index.html';
+    }, 1000);
+    }   else {
+    message.textContent = data.error || 'Login failed.';
+}
+
+            
+     
+        } catch (error) {
+            message.textContent = 'Server se connection nahi ho paya.';
+        }
+    });
+</script>
+</body>
+</html>

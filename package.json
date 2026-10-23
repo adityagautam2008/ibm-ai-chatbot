@@ -7,10 +7,13 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.19.2",
+    "axios": "^1.6.8",
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^13.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "axios": "^1.6.8"
+    "express": "^4.19.2",
+    "express-session": "^1.19.0"
   },
   "engines": {
     "node": ">=18.x"

@@ -1,52 +1,214 @@
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const Database = require('better-sqlite3');
+const bcrypt = require('bcryptjs');
+const session = require('express-session');
 require('dotenv').config();
 
 const app = express();
+
+// Serve frontend files 
+// Ye line Express ko batati hai ki HTML files public folder mein hain.
 app.use(cors());
+
 app.use(express.json());
 
-// Serve static frontend files
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'chatbot-dev-secret-change-this',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        maxAge: 1000 * 60 * 60
+    }
+}));
+
 app.use(express.static(path.join(__dirname, 'public')));
+// Connect to SQLite database 
+
+const db = new Database(path.join(__dirname, 'chatbot.db'));
+
+
+
+
+// Create users table
+db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        enrollment TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+`);
+
+
+// Create chat history table if it doesn't exist
+db.exec(`
+    CREATE TABLE IF NOT EXISTS chat_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_message TEXT NOT NULL,
+        bot_reply TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+`);
+// Jab student signup form bharega, toh 
+// uska naam, enrollment number aur password database mein save hoga.
+console.log('SQLite database connected successfully!');
+
+
+app.post('/api/login', (req, res) => {
+    try {
+        const { enrollment, password } = req.body;
+
+        if (!enrollment || !password) {
+            return res.status(400).json({
+                error: 'Enrollment number and password are required'
+            });
+        }
+
+        const user = db.prepare(`
+            SELECT id, name, enrollment, password_hash
+            FROM users
+            WHERE enrollment = ?
+        `).get(enrollment.trim());
+
+        if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+            return res.status(401).json({
+                error: 'Invalid enrollment number or password'
+            });
+        }
+
+        req.session.userId = user.id;
+        req.session.userName = user.name;
+
+        req.session.save((error) => {
+            if (error) {
+                console.error('Session save error:', error);
+                return res.status(500).json({
+                    error: 'Could not create login session'
+                });
+            }
+
+            res.json({
+                message: 'Login successful!',
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    enrollment: user.enrollment
+                }
+            });
+        });
+
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({
+            error: 'Login failed due to a server error'
+        });
+    }
+});
+
+
+app.get('/api/me', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({
+            loggedIn: false,
+            message: 'Please login first.'
+        });
+    }
+
+    res.json({
+        loggedIn: true,
+        user: {
+            id: req.session.userId,
+            name: req.session.userName
+        }
+    });
+});
+
+
+
 
 // Chat API Endpoint
 app.post('/api/chat', async (req, res) => {
     try {
         const { message } = req.body;
-        if (!message) {
-            return res.status(400).json({ error: 'Message is required' });
+
+        if (!message || !message.trim()) {
+            return res.status(400).json({
+                error: 'Message is required'
+            });
         }
 
-        let botReply = "";
-
-        // Yahan aap apna IBM watsonx AI ya OpenAI/Google Gemini API integration laga sakte hain
-        // Example logic for intelligent search/reply simulation:
-        const query = message.toLowerCase();
         
-        if (query.includes('ibm') || query.includes('cloud')) {
-            botReply = "IBM Cloud is a set of cloud computing services for business offered by US-based information technology company IBM. It provides Infrastructure as a Service (IaaS), Software as a Service (SaaS) and Platform as a Service (PaaS) through public, private and hybrid cloud models.";
-        } else if (query.includes('hello') || query.includes('hi')) {
-            botReply = "Hello! I am your IBM Cloud AI Assistant. How can I help you search for answers today?";
-        } else if (query.includes('name')) {
-            botReply = "I am an intelligent cloud chatbot deployed for your IBM Cloud project.";
-        } else {
-            // Generic AI search simulation response
-            botReply = `You searched for: "${message}". Based on my knowledge base, here is the relevant information: This is a dynamic query response generated live by your IBM Cloud application backend. You can connect this to Watsonx Discovery or Assistant for deep enterprise search!`;
-        }
+let botReply = '';
+const query = message.toLowerCase();
 
-        // Simulate network delay for natural feel
-        setTimeout(() => {
-            res.json({ reply: botReply });
-        }, 500);
+// Search the knowledge base first
+const searchText = message.trim().toLowerCase();
+
+let knowledge = null;
+
+if (searchText.includes('iaas')) {
+    knowledge = db.prepare(`
+        SELECT answer FROM knowledge_base
+        WHERE LOWER(question) LIKE '%iaas%'
+        LIMIT 1
+    `).get();
+} else if (searchText.includes('paas')) {
+    knowledge = db.prepare(`
+        SELECT answer FROM knowledge_base
+        WHERE LOWER(question) LIKE '%paas%'
+        LIMIT 1
+    `).get();
+} else if (searchText.includes('saas')) {
+    knowledge = db.prepare(`
+        SELECT answer FROM knowledge_base
+        WHERE LOWER(question) LIKE '%saas%'
+        LIMIT 1
+    `).get();
+} else {
+    knowledge = db.prepare(`
+        SELECT answer FROM knowledge_base
+        WHERE LOWER(question) = ?
+        LIMIT 1
+    `).get(searchText);
+}
+
+
+if (knowledge) {
+    botReply = knowledge.answer;
+} else if (query.includes('ibm') || query.includes('cloud')) {
+    botReply = 'IBM Cloud provides cloud computing services, including IaaS, PaaS and SaaS, through public, private and hybrid cloud models.';
+} else if (query.includes('hello') || query.includes('hi')) {
+    botReply = 'Hello! I am your IBM Cloud AI Assistant. How can I help you today?';
+} else if (query.includes('name')) {
+    botReply = 'I am an intelligent cloud chatbot for your IBM Cloud project.';
+} else {
+    botReply = `You searched for: "${message}". I could not find an exact match in my knowledge base yet.`;
+}
+
+        // Save user message and bot reply to SQLite
+        const saveChat = db.prepare(`
+            INSERT INTO chat_history (user_message, bot_reply)
+            VALUES (?, ?)
+        `);
+
+        saveChat.run(message.trim(), botReply);
+
+        res.json({ reply: botReply });
 
     } catch (error) {
-        console.h('Error:', error);
+        console.error('Chat error:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
+// Start server
 const PORT = process.env.PORT || 8080;
+
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });

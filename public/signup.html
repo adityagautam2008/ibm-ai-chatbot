@@ -1,0 +1,135 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Sign Up | IBM Cloud Chatbot</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .signup-box {
+            background: white;
+            padding: 30px;
+            width: 320px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px #00000020;
+        }
+
+        h2 {
+            text-align: center;
+            color: #0f62fe;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0 15px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #0f62fe;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0353e9;
+        }
+
+        p {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="signup-box">
+        <h2>Student Sign Up</h2>
+
+        <form id="signupForm">
+            <label>Full Name</label>
+            <input type="text" id="name"
+                   placeholder="Enter your name" required>
+
+            <label>Enrollment Number</label>
+            <input type="text" id="enrollment"
+                   placeholder="Enter enrollment number" required>
+
+            <label>Password</label>
+            <input type="password" id="password"
+                   placeholder="Create a password" required>
+
+            <label>Confirm Password</label>
+            <input type="password" id="confirmPassword"
+                   placeholder="Enter password again" required>
+
+            <button type="submit">Create Account</button>
+        </form>
+
+        <p>Already registered? <a href="login.html">Login</a></p>
+        <p id="message"></p>
+    </div>
+    
+<script>
+    const signupForm = document.getElementById('signupForm');
+    const message = document.getElementById('message');
+
+    signupForm.addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        const name = document.getElementById('name').value.trim();
+        const enrollment = document.getElementById('enrollment').value.trim();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        if (password !== confirmPassword) {
+            message.textContent = 'Passwords do not match!';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: name,
+                    enrollment: enrollment,
+                    password: password
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                message.textContent = 'Account created successfully! Please login.';
+                signupForm.reset();
+            } else {
+                message.textContent = data.error || 'Signup failed.';
+            }
+        } catch (error) {
+            message.textContent = 'Server se connection nahi ho paya.';
+        }
+    });
+</script>
+</body>
+</html>
+
