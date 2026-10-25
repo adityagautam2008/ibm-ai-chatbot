@@ -11,7 +11,12 @@ const app = express();
 
 // Serve frontend files 
 // Ye line Express ko batati hai ki HTML files public folder mein hain.
-app.use(cors());
+
+app.use(cors({
+    origin: 'https://ibm-ai-chatbot-public.vercel.app',
+    credentials: true
+}));
+
 
 app.use(express.json());
 
