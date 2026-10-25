@@ -1,22 +1,17 @@
 
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
 const Database = require('better-sqlite3');
 const bcrypt = require('bcryptjs');
 const session = require('express-session');
 require('dotenv').config();
 
 const app = express();
-
+app.set('trust proxy', 1);
 // Serve frontend files 
 // Ye line Express ko batati hai ki HTML files public folder mein hain.
-
 app.use(cors({
     origin: 'https://ibm-ai-chatbot-public.vercel.app',
     credentials: true
 }));
-
 
 app.use(express.json());
 
@@ -26,6 +21,8 @@ app.use(session({
     saveUninitialized: false,
     cookie: {
         httpOnly: true,
+        secure: true,
+        sameSite:'none',
         maxAge: 1000 * 60 * 60
     }
 }));
@@ -62,6 +59,53 @@ db.exec(`
 // Jab student signup form bharega, toh 
 // uska naam, enrollment number aur password database mein save hoga.
 console.log('SQLite database connected successfully!');
+
+app.post('/api/signup', (req, res) => {
+    try {
+        const { name, enrollment, password } = req.body;
+
+        if (!name || !enrollment || !password) {
+            return res.status(400).json({
+                error: 'Name, enrollment number and password are required'
+            });
+        }
+
+        if (password.length < 8) {
+            return res.status(400).json({
+                error: 'Password must be at least 8 characters long'
+            });
+        }
+
+        const existingUser = db.prepare(
+            'SELECT id FROM users WHERE enrollment = ?'
+        ).get(enrollment.trim());
+
+        if (existingUser) {
+            return res.status(409).json({
+                error: 'This enrollment number is already registered'
+            });
+        }
+
+        const passwordHash = bcrypt.hashSync(password, 10);
+
+        const result = db.prepare(`
+            INSERT INTO users (name, enrollment, password_hash)
+            VALUES (?, ?, ?)
+        `).run(name.trim(), enrollment.trim(), passwordHash);
+
+        return res.status(201).json({
+            message: 'Account created successfully!',
+            userId: result.lastInsertRowid
+        });
+
+    } catch (error) {
+        console.error('Signup error:', error);
+
+        return res.status(500).json({
+            error: 'Signup failed due to a server error'
+        });
+    }
+});
 
 
 app.post('/api/login', (req, res) => {
