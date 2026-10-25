@@ -64,69 +64,87 @@
         <h2>Student Login</h2>
 
         <form id="loginForm">
-            <label>Enrollment Number</label>
+            <label for="enrollment">Enrollment Number</label>
             <input
                 type="text"
                 id="enrollment"
+                name="enrollment"
                 placeholder="Enter enrollment number"
                 required
             >
 
-            <label>Password</label>
+            <label for="password">Password</label>
             <input
                 type="password"
                 id="password"
+                name="password"
                 placeholder="Enter your password"
                 required
             >
 
-            <button type="submit">Login</button>
+            <button type="submit" id="loginButton">Login</button>
         </form>
 
         <p>New student? <a href="signup.html">Create Account</a></p>
-
-        <p id="message"></p>
+        <p id="message" role="status" aria-live="polite"></p>
     </div>
-    
-<script>
-    const loginForm = document.getElementById('loginForm');
-    const message = document.getElementById('message');
 
-    loginForm.addEventListener('submit', async function (event) {
-        event.preventDefault();
+    <script>
+        const API_URL = 'https://ibm-ai-chatbot-ycof.onrender.com';
 
-        const enrollment = document.getElementById('enrollment').value.trim();
-        const password = document.getElementById('password').value;
+        const loginForm = document.getElementById('loginForm');
+        const message = document.getElementById('message');
+        const loginButton = document.getElementById('loginButton');
 
-        try {
-            const response = await fetch('/api/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    enrollment: enrollment,
-                    password: password
-                })
-            });
+        loginForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
 
-            const data = await response.json();
-            if (response.ok) {
-    message.textContent = 'Login successful! Welcome, ' + data.user.name;
+            const enrollment =
+                document.getElementById('enrollment').value.trim();
+            const password =
+                document.getElementById('password').value;
 
-    setTimeout(function () {
-        window.location.href = '/index.html';
-    }, 1000);
-    }   else {
-    message.textContent = data.error || 'Login failed.';
-}
+            message.textContent = 'Logging in...';
+            loginButton.disabled = true;
 
-            
-     
-        } catch (error) {
-            message.textContent = 'Server se connection nahi ho paya.';
-        }
-    });
-</script>
+            try {
+                const response = await fetch(`${API_URL}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        enrollment: enrollment,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Login failed.');
+                }
+
+                message.style.color = 'green';
+                message.textContent =
+                    'Login successful! Welcome, ' + data.user.name;
+
+                setTimeout(function () {
+                    window.location.href = '/index.html';
+                }, 1000);
+
+            } catch (error) {
+                console.error('Login error:', error);
+                message.style.color = 'red';
+                message.textContent =
+                    error instanceof TypeError
+                        ? 'Server se connection nahi ho paya.'
+                        : error.message;
+            } finally {
+                loginButton.disabled = false;
+            }
+        });
+    </script>
 </body>
 </html>
