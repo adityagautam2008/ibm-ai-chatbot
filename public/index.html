@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>AI Knowledge Chatbot | IBM Cloud</title>
-    <!-- Google Fonts & FontAwesome -->
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <style>
         :root {
-            --primary: #0f62fe; /* IBM Blue */
+            --primary: #0f62fe;
             --primary-hover: #0353e9;
             --bg-color: #f4f4f4;
             --chat-bg: #ffffff;
@@ -32,16 +33,18 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-main);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 10px;
         }
 
         .chat-container {
             width: 100%;
             max-width: 800px;
             height: 90vh;
+            min-height: 450px;
             background: var(--chat-bg);
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
@@ -51,14 +54,14 @@
             border: 1px solid var(--border-color);
         }
 
-        /* Header Styling */
         .chat-header {
             padding: 20px 24px;
             background: #161616;
-            color: #ffffff;
+            color: white;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 12px;
         }
 
         .header-info h2 {
@@ -67,6 +70,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         .header-info h2 span {
@@ -83,9 +87,9 @@
             margin-top: 4px;
         }
 
-        /* Chat Body / Message Window */
         .chat-messages {
             flex: 1;
+            min-height: 0;
             padding: 24px;
             overflow-y: auto;
             display: flex;
@@ -95,39 +99,44 @@
         }
 
         .message {
-            max-width: 75%;
+            max-width: 85%;
             padding: 12px 16px;
             border-radius: 12px;
             font-size: 0.95rem;
             line-height: 1.5;
-            word-wrap: break-word;
+            overflow-wrap: anywhere;
             animation: fadeIn 0.3s ease-in-out;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .message.bot {
-            background-color: var(--bot-bubble);
+            background: var(--bot-bubble);
             color: var(--text-main);
             align-self: flex-start;
             border-bottom-left-radius: 2px;
         }
 
         .message.user {
-            background-color: var(--user-bubble);
+            background: var(--user-bubble);
             color: var(--user-text);
             align-self: flex-end;
             border-bottom-right-radius: 2px;
         }
 
-        /* Typing Indicator */
         .typing-indicator {
             display: none;
             align-self: flex-start;
-            background-color: var(--bot-bubble);
+            background: var(--bot-bubble);
             padding: 12px 16px;
             border-radius: 12px;
             border-bottom-left-radius: 2px;
@@ -136,26 +145,58 @@
         .typing-indicator span {
             height: 8px;
             width: 8px;
-            float: left;
             margin: 0 2px;
-            background-color: #999;
+            background: #999;
             border-radius: 50%;
             display: inline-block;
             animation: bounce 1.3s infinite ease-in-out;
         }
 
-        .typing-indicator span:nth-child(2) { animation-delay: -1.1s; }
-        .typing-indicator span:nth-child(3) { animation-delay: -0.9s; }
-
-        @keyframes bounce {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-6px); }
+        .typing-indicator span:nth-child(2) {
+            animation-delay: -1.1s;
         }
 
-        /* Input Bar Area */
+        .typing-indicator span:nth-child(3) {
+            animation-delay: -0.9s;
+        }
+
+        @keyframes bounce {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-6px);
+            }
+        }
+
+        .suggestions {
+            padding: 0 24px 12px;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            background: white;
+        }
+
+        .suggestion-chip {
+            background: #f4f4f4;
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            white-space: nowrap;
+            color: var(--text-secondary);
+        }
+
+        .suggestion-chip:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
         .chat-input-area {
             padding: 20px 24px;
-            background: #ffffff;
+            background: white;
             border-top: 1px solid var(--border-color);
             display: flex;
             gap: 12px;
@@ -164,12 +205,12 @@
 
         .chat-input-area input {
             flex: 1;
+            min-width: 0;
             padding: 14px 18px;
             border: 1px solid var(--border-color);
             border-radius: 8px;
             outline: none;
             font-size: 0.95rem;
-            transition: border-color 0.2s;
         }
 
         .chat-input-area input:focus {
@@ -177,183 +218,292 @@
         }
 
         .chat-input-area button {
-            background-color: var(--primary);
+            background: var(--primary);
             color: white;
             border: none;
             padding: 14px 20px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.2s;
         }
 
         .chat-input-area button:hover {
-            background-color: var(--primary-hover);
+            background: var(--primary-hover);
         }
 
-        
-        .suggestions {
-            padding: 0 24px 12px 24px;
+        .chat-input-area button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .header-actions {
             display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            background: #ffffff;
+            align-items: center;
+            gap: 12px;
         }
 
-        .suggestion-chip {
-            background: #f4f4f4;
-            border: 1px solid var(--border-color);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
+        #logoutButton {
+            background: transparent;
+            color: white;
+            border: 1px solid #777;
+            padding: 8px 12px;
+            border-radius: 6px;
             cursor: pointer;
             white-space: nowrap;
-            color: var(--text-secondary);
-            transition: all 0.2s;
         }
 
-        .suggestion-chip:hover {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
+        #logoutButton:hover {
+            background: #333;
+        }
+
+        @media (max-width: 600px) {
+            .chat-container {
+                height: 95vh;
+            }
+
+            .chat-header {
+                padding: 16px;
+            }
+
+            .header-info p {
+                max-width: 240px;
+            }
+
+            .chat-messages {
+                padding: 16px;
+            }
+
+            .suggestions {
+                padding: 0 16px 12px;
+            }
+
+            .chat-input-area {
+                padding: 14px;
+            }
+
+            .chat-input-area input {
+                padding: 12px;
+            }
+
+            .chat-input-area button {
+                padding: 12px 16px;
+            }
+
+            #logoutButton {
+                padding: 7px;
+            }
         }
     </style>
 </head>
+
 <body>
-
     <div class="chat-container">
-        <!-- Header -->
-        <div class="chat-header">
+
+        <header class="chat-header">
             <div class="header-info">
-                <h2>IBM Cloud Assistant <span>AI Search</span></h2>
-                <p>Ask anything, get instant answers from your smart knowledge base</p>
+                <h2>
+                    IBM Cloud Assistant
+                    <span>AI Search</span>
+                </h2>
+                <p id="welcomeText">
+                    Ask questions and get answers from your knowledge base.
+                </p>
             </div>
-            <i class="fa-solid fa-cloud" style="font-size: 1.5rem; color: #0f62fe;"></i>
-        </div>
 
-        <!-- Messages Area -->
-        <div class="chat-messages" id="chatMessages">
+            <div class="header-actions">
+                <i class="fa-solid fa-cloud"
+                   style="font-size: 1.5rem; color: #0f62fe;"></i>
+                <button id="logoutButton" type="button">Logout</button>
+            </div>
+        </header>
+
+        <div class="chat-messages" id="chatMessages" aria-live="polite">
             <div class="message bot">
-                Hello! 👋 I am your intelligent search assistant running on IBM Cloud. Type any question below or click a quick suggestion to get started!
+                Hello! 👋 I am your IBM Cloud Assistant.
+                Ask me a question to get started!
             </div>
         </div>
 
-        <!-- Typing Indicator -->
-        <div class="chat-messages" style="padding-top: 0; padding-bottom: 0;">
+        <div style="padding: 0 24px;">
             <div class="typing-indicator" id="typingIndicator">
                 <span></span><span></span><span></span>
             </div>
         </div>
 
-        <!-- Quick Suggestions -->
         <div class="suggestions">
-            <div class="suggestion-chip" onclick="sendPreset('What is IBM Cloud?')">What is IBM Cloud?</div>
-            <div class="suggestion-chip" onclick="sendPreset('How to deploy an app?')">How to deploy an app?</div>
-            <div class="suggestion-chip" onclick="sendPreset('Tell me about cloud databases')">Database options</div>
+            <button class="suggestion-chip" type="button"
+                onclick="sendPreset('What is IBM Cloud?')">
+                What is IBM Cloud?
+            </button>
+
+            <button class="suggestion-chip" type="button"
+                onclick="sendPreset('How to deploy an app?')">
+                How to deploy an app?
+            </button>
+
+            <button class="suggestion-chip" type="button"
+                onclick="sendPreset('Tell me about cloud databases')">
+                Database options
+            </button>
         </div>
 
-        <!-- Input Area -->
-        <div class="chat-input-area">
-            <input type="text" id="userInput" placeholder="Search or ask a question..." onkeypress="handleKeyPress(event)">
-            <button onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
-        </div>
+        <form class="chat-input-area" id="chatForm">
+            <input
+                type="text"
+                id="userInput"
+                placeholder="Search or ask a question..."
+                autocomplete="off"
+                required
+            >
+            <button type="submit" id="sendButton" aria-label="Send message">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </form>
+
     </div>
 
     <script>
+        const API_URL = 'https://ibm-ai-chatbot-ycof.onrender.com';
+
         const chatMessages = document.getElementById('chatMessages');
         const userInput = document.getElementById('userInput');
         const typingIndicator = document.getElementById('typingIndicator');
+        const chatForm = document.getElementById('chatForm');
+        const sendButton = document.getElementById('sendButton');
+        const logoutButton = document.getElementById('logoutButton');
+        const welcomeText = document.getElementById('welcomeText');
 
-        function sendPreset(text) {
-            userInput.value = text;
-            sendMessage();
-        }
-
-        function handleKeyPress(event) {
-            if (event.key === 'Enter') {
-                sendMessage();
-            }
-        }
-
-        async function sendMessage() {
-            const text = userInput.value.trim();
-            if (!text) return;
-
-            // Append User Message
-            appendMessage(text, 'user');
-            userInput.value = '';
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-
-            // Show Typing Indicator
-            typingIndicator.style.display = 'block';
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-
-            try {
-                // Call Backend API
-                
-const response = await fetch('https://ibm-ai-chatbot-ycof.onrender.com/api/chat', {
-
-            
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: text })
-                });
-
-                const data = await response.json();
-                
-                // Hide Typing Indicator
-                typingIndicator.style.display = 'none';
-
-                if (data.reply) {
-                    appendMessage(data.reply, 'bot');
-                } else {
-                    appendMessage("Sorry, I couldn't process that request.", 'bot');
-                }
-            } catch (error) {
-                typingIndicator.style.display = 'none';
-                appendMessage("Error connecting to IBM Cloud backend server.", 'bot');
-            }
-
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
+        let isSending = false;
 
         function appendMessage(text, sender) {
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('message', sender);
             messageDiv.textContent = text;
-            // Insert before typing indicator
             chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
-    </script>
 
-    
-<script>
-    async function checkLogin() {
-        try {
-            
-const response = await fetch('https://ibm-ai-chatbot-ycof.onrender.com/api/me', {
-    credentials: 'include'
-});
+        function sendPreset(text) {
+            userInput.value = text;
+            userInput.focus();
+            chatForm.requestSubmit();
+        }
 
+        async function checkLogin() {
+            try {
+                const response = await fetch(`${API_URL}/api/me`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
 
-            if (!response.ok) {
-                window.location.replace('/login.html');
+                if (response.status === 401) {
+                    window.location.replace('/login.html');
+                    return;
+                }
+
+                if (!response.ok) {
+                    appendMessage(
+                        'Login session check failed. Please refresh the page.',
+                        'bot'
+                    );
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data.user && data.user.name) {
+                    welcomeText.textContent =
+                        `Welcome, ${data.user.name}! Ask me anything about IBM Cloud.`;
+                }
+            } catch (error) {
+                console.error('Session check error:', error);
+                appendMessage(
+                    'Unable to connect to the backend. Please try again later.',
+                    'bot'
+                );
+            }
+        }
+
+        chatForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const text = userInput.value.trim();
+
+            if (!text || isSending) {
                 return;
             }
-        } catch (error) {
-            console.error('Session check failed:', error);
-        }
-    }
 
-    checkLogin();
-</script>
+            appendMessage(text, 'user');
+            userInput.value = '';
 
+            isSending = true;
+            sendButton.disabled = true;
+            typingIndicator.style.display = 'block';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            try {
+                const response = await fetch(`${API_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        message: text
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.error || `Request failed (${response.status})`
+                    );
+                }
+
+                if (data.reply) {
+                    appendMessage(data.reply, 'bot');
+                } else {
+                    appendMessage(
+                        'The server returned no answer. Please try again.',
+                        'bot'
+                    );
+                }
+            } catch (error) {
+                console.error('Chat API error:', error);
+                appendMessage(
+                    error instanceof TypeError
+                        ? 'Connection error. Please check the backend and try again.'
+                        : error.message,
+                    'bot'
+                );
+            } finally {
+                typingIndicator.style.display = 'none';
+                isSending = false;
+                sendButton.disabled = false;
+                userInput.focus();
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        });
+
+        logoutButton.addEventListener('click', async function () {
+            try {
+                const response = await fetch(`${API_URL}/api/logout`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    console.warn('Logout endpoint returned:', response.status);
+                }
+            } catch (error) {
+                console.error('Logout request failed:', error);
+            }
+
+            window.location.replace('/login.html');
+        });
+
+        checkLogin();
+    </script>
 </body>
 </html>
-
-
-
-
