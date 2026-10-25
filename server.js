@@ -32,8 +32,58 @@ app.use(session({
 app.use(express.static(path.join(__dirname, 'public')));
 // Connect to SQLite database 
 
+
 const db = new Database(path.join(__dirname, 'chatbot.db'));
 
+db.exec(`
+    CREATE TABLE IF NOT EXISTS knowledge_base (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        question TEXT NOT NULL,
+        answer TEXT NOT NULL
+    );
+
+    INSERT INTO knowledge_base (question, answer)
+    SELECT 'What is IBM Cloud?',
+           'IBM Cloud is a cloud computing platform that provides infrastructure, platform, and software services.'
+    WHERE NOT EXISTS (
+        SELECT 1 FROM knowledge_base WHERE question = 'What is IBM Cloud?'
+    );
+
+    INSERT INTO knowledge_base (question, answer)
+    SELECT 'What is IaaS?',
+           'Infrastructure as a Service (IaaS) provides virtual servers, storage, and networking over the internet.'
+    WHERE NOT EXISTS (
+        SELECT 1 FROM knowledge_base WHERE question = 'What is IaaS?'
+    );
+
+    INSERT INTO knowledge_base (question, answer)
+    SELECT 'What is PaaS?',
+           'Platform as a Service (PaaS) provides a platform to develop, test, and deploy applications.'
+    WHERE NOT EXISTS (
+        SELECT 1 FROM knowledge_base WHERE question = 'What is PaaS?'
+    );
+
+    INSERT INTO knowledge_base (question, answer)
+    SELECT 'What is SaaS?',
+           'Software as a Service (SaaS) allows users to access software over the internet without installing and managing it themselves.'
+    WHERE NOT EXISTS (
+        SELECT 1 FROM knowledge_base WHERE question = 'What is SaaS?'
+    );
+
+    INSERT INTO knowledge_base (question, answer)
+    SELECT 'What is Cloud Computing?',
+           'Cloud computing provides computing resources such as servers, storage, databases, and software over the internet.'
+    WHERE NOT EXISTS (
+        SELECT 1 FROM knowledge_base WHERE question = 'What is Cloud Computing?'
+    );
+
+    INSERT INTO knowledge_base (question, answer)
+    SELECT 'What is a Hybrid Cloud?',
+           'A hybrid cloud combines private cloud infrastructure with public cloud services.'
+    WHERE NOT EXISTS (
+        SELECT 1 FROM knowledge_base WHERE question = 'What is a Hybrid Cloud?'
+    );
+`);
 
 
 
